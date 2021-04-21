@@ -107,3 +107,31 @@ TEST(DISABLED_SampleTest, DISABLED_TestA) {
 
 TEST(SampleTest, TestB) {
 }
+
+// 7. 필터
+//   : 잘 정의된 이름 규칙이 필요합니다.
+//   $ ./a.out --gtest_filter=*.TestA
+//   $ ./a.out --gtest_filter=-*.TestA
+//
+//   $ ./a.out --gtest_filter=TestSuiteA.*:-*.TestA
+TEST(TestSuiteA, TestA) {}
+TEST(TestSuiteB, TestA) {}
+TEST(TestSuiteC, TestA) {}
+TEST(TestSuiteD, TestA) {}
+
+TEST(TestSuiteA, TestB) {}
+TEST(TestSuiteB, TestB) {}
+TEST(TestSuiteC, TestB) {}
+
+// 8. Test Result Formatter
+//   $ ./a.out --gtest_output=[xml|json]:/path/output.xml
+//
+//   xml: test_details.xml  -> xUnit Test Framework
+//  json: test_details.json -> Google Test
+
+
+// 9. 추가적인 정보도 기록할 수 있습니다.
+TEST(GoogleTest, Sample9) {
+	RecordProperty("cpu", "1.5");  // !
+	RecordProperty("mem", "512m"); // !
+}
