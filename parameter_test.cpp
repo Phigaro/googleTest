@@ -103,7 +103,9 @@ TEST_P(PrimeTest, IsPrime) {
 	EXPECT_TRUE(IsPrime(GetParam()));
 }
 #endif
+// 9_파라미터화테스트3.cpp
 
+#if 0
 #include <gtest/gtest.h>
 
 bool Check(int arg1, int arg2) {
@@ -135,4 +137,100 @@ TEST_P(SampleTest, Check) {
 	Input input = GetParam();
 	EXPECT_TRUE(Check(input.arg1, input.arg2));
 	EXPECT_EQ(Check(input.arg1, input.arg2), input.result);
+}
+#endif
+
+// 9_파라미터화테스트4.cpp
+#if 0
+#include <gtest/gtest.h>
+
+enum Color { BLACK, RED, WHITE };
+const char* animals[] = { "Cat", "Dog" };
+
+// "Cat" - BLACK / RED / WHITE
+// "Dog" - BLACK / RED / WHITE
+class AnimalTest : public testing::TestWithParam<std::tuple<const char*, Color>> {
+};
+
+using testing::Values;
+using testing::ValuesIn;
+using testing::Combine;
+
+INSTANTIATE_TEST_SUITE_P(AnimalVariations, AnimalTest, 
+	Combine(ValuesIn(animals), Values(BLACK, RED, WHITE)));
+
+TEST_P(AnimalTest, AnimalLooks) {
+	std::tuple<const char*, Color> data = GetParam();
+
+	const char* animal = std::get<0>(data);
+	Color color = std::get<1>(data);
+
+	printf("%s(%d)\n", animal, color);
+}
+#endif
+
+// 9_파라미터화테스트5.cpp
+#if 0
+#include <iostream>
+#include <vector>
+#include <string>
+
+#include <gtest/gtest.h>
+
+class StringTest : public testing::TestWithParam<std::string> {
+};
+
+// Data가 별도의 파일에서 로드가 필요합니다.
+//  => ValuesIn
+
+// std::vector<std::string> LoadFromFile() {
+// 	std::vector<std::string> result;
+// 	result.push_back("hello");
+// 	result.push_back("world");
+// 	return result;
+// }
+
+// $ ./a.out < input.txt
+std::vector<std::string> LoadFromFile() {
+	std::vector<std::string> v;
+
+	while (!std::cin.eof()) {
+		std::string input;
+		std::cin >> input;
+
+		v.push_back(input);
+	}
+
+	return v;
+}
+
+using testing::ValuesIn;
+INSTANTIATE_TEST_SUITE_P(StringValues, StringTest, 
+	ValuesIn(LoadFromFile()));
+
+TEST_P(StringTest, InputTest) {
+	std::string s = GetParam();
+	std::cout << s << std::endl;
+}
+#endif
+
+// 9_파라미터화테스트6.cpp
+#include <gtest/gtest.h>
+
+class SampleTest : public testing::TestWithParam<int> {
+};
+
+// Values
+// ValuesIn
+// Combine
+// Range
+using testing::Range;
+// Range(0, 100, step)
+//   [0, 100)
+
+INSTANTIATE_TEST_SUITE_P(IntValues, SampleTest, 
+	Range(0, 100, 10));
+
+TEST_P(SampleTest, Sample) {
+	printf("%d\n", GetParam());
 }
