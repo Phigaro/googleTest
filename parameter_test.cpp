@@ -38,6 +38,7 @@ TEST(PrimeTest, IsPrime) {
 
 #endif
 
+#if 0
 // 9_파라미터화테스트2.cpp
 
 bool IsPrime(int value) {
@@ -47,8 +48,8 @@ bool IsPrime(int value) {
 		}
 	}
 
-	// return true;
-	return false;
+	return true;
+	// return false;
 }
 
 #include <gtest/gtest.h>
@@ -63,18 +64,75 @@ bool IsPrime(int value) {
 //  testing::TestWithParam<T>
 //   T ->Input Type 
 class PrimeTest : public testing::TestWithParam<int> {
+protected:
+	void SetUp() override {
+		printf("SetUp()\n");
+	}
+
+	void TearDown() override {
+		printf("TearDown()\n");
+	}
+
+	static void SetUpTestSuite() {
+		printf("SetUpTestSuite()\n");
+	}
+
+	static void TearDownTestSuite() {
+		printf("TearDownTestSuite()\n");
+	}
 };
 
 // 2. DataSet 정의
 // INSTANTIATE_TEST_CASE_P(심볼이름, TestSuiteName, DataSet); - 1.10 이전
 // INSTANTIATE_TEST_SUITE_P(심볼이름, TestSuiteName, DatSet); - 1.10 이후
 
+using testing::Values;
+using testing::ValuesIn;
+
+int data[] = { 2, 3, 5, 7, 11, 13, 17, 19, 23 };
+
 INSTANTIATE_TEST_SUITE_P(PrimeValues, PrimeTest, 
-	testing::Values(2, 3, 5, 7, 11, 13, 17, 19, 23));
+	// Values(2, 3, 5, 7, 11, 13, 17, 19, 23));
+	ValuesIn(data));
 
 // 3. TestCase 생성
-//  TEST / TEST_F
-//  TEST_P를 통해 테스트 케이스를 작성해야 합니다.
+//    TEST: 암묵적인 TestSuite class
+//  TEST_F: 명시적인 TestSuite class - testing::Test
+//  TEST_P: 명시적인 TestSuite class - testing::TestWithParam<T> : GetParam()
 TEST_P(PrimeTest, IsPrime) {
 	EXPECT_TRUE(IsPrime(GetParam()));
+}
+#endif
+
+#include <gtest/gtest.h>
+
+bool Check(int arg1, int arg2) {
+	return arg1 > arg2;
+}
+
+//-----
+
+struct Input {
+	int arg1;
+	int arg2;
+
+	bool result;
+};
+
+std::ostream& operator<<(std::ostream& os, const Input& input) {
+	return os << "Input{arg1=" << input.arg1 << ", arg2=" << input.arg2 << ", result=" << input.result << "}";
+}
+
+class SampleTest : public testing::TestWithParam<Input> {
+};
+
+using testing::Values;
+
+INSTANTIATE_TEST_SUITE_P(InputValues, SampleTest,
+	Values(Input{20, 30, true}, Input{30, 40, true}, Input{40, 50, true}));
+
+TEST_P(SampleTest, Check) {
+	Input input = GetParam();
+	EXPECT_TRUE(Check(input.arg1, input.arg2));
+	EXPECT_EQ(Check(input.arg1, input.arg2), input.result);
 }
