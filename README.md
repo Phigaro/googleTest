@@ -36,3 +36,6 @@ g++ -c ./googletest/googlemock/src/gmock_main.cc -I.
 
 # add archive to (gmock-gtest-all.o gmock_main.o) to libgtest.a
 ar rcv libgtest.a gmock-gtest-all.o gmock_main.o
+
+# DloggerTarget gmock gen
+./googletest/googlemock/scripts/generator/gmock_gen.py DLoggerTarget.h

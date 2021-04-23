@@ -1,6 +1,8 @@
 #include <string>
 #include <vector>
 
+#include "DLoggerTarget.h"
+#if 0
 enum Level {
 	INFO, WARN, ERROR
 };
@@ -10,6 +12,7 @@ struct DLoggerTarget {
 
 	virtual void Write(Level level, const std::string& message) = 0;
 };
+#endif
 
 class FileTarget : public DLoggerTarget {
 public:
@@ -34,7 +37,7 @@ public:
 
 	void Write(Level level, const std::string& message) {
 		for (DLoggerTarget* e: targets) {
-			// e->Write(level, message);
+			e->Write(level, message);
 		}
 	}
 };
@@ -61,13 +64,28 @@ public:
 #include <gmock/gmock.h>
 
 // 2. Mocking
-// virtual void Write(Level level, const std::string& message) = 0;
 	
-// MOCK_METHOD{ArgN}(함수 이름, 함수 시그니처)
+
+#if 0
+// 아래의 방법은 더 이상 권장되지 않습니다. - 1.10 이전
+// - MOCK_METHOD{ArgN}(함수 이름, 함수 시그니처)
+$ ./googletest/googlemock/scripts/generator/gmock_gen.py DLoggerTarget.h
+
+class MockDLoggerTarget : public DLoggerTarget {
+ public:
+  MOCK_METHOD2(Write,
+      void(Level level, const std::string& message));
+};
+#endif
+
+// 1.10
+//  - Mocking을 위한 매크로가 변경되었습니다.
+//   => MOCK_METHOD(반환타입, 함수이름, 인자정보, 한정자정보);
+
 class MockDLoggerTarget : public DLoggerTarget {
 public:
-	MOCK_METHOD2(Write,
-		void (Level level, const std::string&));
+	// void Write(Level level, const std::string& message) override {}
+	MOCK_METHOD(void, Write, (Level level, const std::string& message), (override));
 };
 
 // DLoggerTarget에 2개 이상 타겟이 등록되고,
