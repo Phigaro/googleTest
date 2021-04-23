@@ -108,7 +108,35 @@ struct Foo {
 
 class MockFoo : public Foo {
 public:
-	MOCK_METHOD
-	
-
+	MOCK_METHOD(void, First, (), (override));
+	MOCK_METHOD(void, Second, (), (override));
+	MOCK_METHOD(void, Third, (), (override));
+	MOCK_METHOD(void, Forth, (), (override));
 };
+
+void Sample4(Foo* p) {
+	p->First();
+	p->Second();
+	p->Third();
+	p->Forth();
+}
+
+// 3. 호출 순서
+//  => EXPECT_CALL은 기본적으로 순서를 판단하지 않습니다.
+
+// First ->Second ->Third ->Forth
+// => testing::InSequence
+
+using testing::InSequence;
+
+TEST(FooTest, Sample4) {
+	MockFoo mock;
+	InSequence seq; // !!
+
+	EXPECT_CALL(mock, First);
+	EXPECT_CALL(mock, Second);
+	EXPECT_CALL(mock, Third);
+	EXPECT_CALL(mock, Forth);
+	
+	Sample4(&mock);
+}

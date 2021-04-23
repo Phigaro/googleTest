@@ -29,18 +29,19 @@ public:
 };
 
 //----------
-#include <gtest/gtest.h>
+#include <gmock/gmock.h>
 
 class StubTime : public Time {
 public:
-	std::string GetCurrentTime() override {
-		return "00:00";
-	}
+	MOCK_METHOD(std::string, GetCurrentTime, (), (override));
 };
 
+using testing::NiceMock;
+using testing::Return;
+
 TEST(UserTest, Display) {
-	StubTime c;
-	// Clock c;
+	NiceMock<StubTime> c;
+	ON_CALL(c, GetCurrentTime).WillByDefault(Return("00:00"));
 	User user(&c);
 
 	EXPECT_EQ(user.Display(), 42) << "00:00분에 수행하였을 때";
