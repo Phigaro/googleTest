@@ -1,108 +1,103 @@
-#include <string>
-#include <vector>
-
-#include "DLoggerTarget.h"
 #if 0
-enum Level {
-	INFO, WARN, ERROR
+// #include <gtest/gtest.h>
+#include <gmock/gmock.h>
+// : Google Mock은 Google Test에 대한 의존성이 있습니다.
+
+struct Mp3 {
+	virtual ~Mp3() {}
+
+	virtual void Play() = 0;
+	virtual void Stop(int n) = 0;
+
+	virtual std::string GetName() const = 0;
+	virtual void Foo() noexcept = 0;
+
+	virtual std::pair<bool, int> GetPair() const = 0;
+	virtual bool CheckMap(std::map<int, double> a, bool b) = 0;
 };
 
-struct DLoggerTarget {
-	virtual ~DLoggerTarget() {}
+// Mocking - 테스트 대역
+// 1.10
+//  - MOCK_METHOD(반환타입, 이름, (인자1, 인자2), (한정자1, 한정자2));
 
-	virtual void Write(Level level, const std::string& message) = 0;
+// 한정자
+//  - override: virtual 함수(옵션)
+//  - const: 필수
+//  - noexcept: 필수
+//  - stdcall: Windows platform(필수)
+
+// Type aliasing
+using BoolIntPair = std::pair<bool, int>;
+using IntDoubleMap = std::map<int, double>;
+
+class MockMp3 : public Mp3 {
+public:
+	MOCK_METHOD(bool, CheckMap, (IntDoubleMap a, bool b), (override));
+	MOCK_METHOD(BoolIntPair, GetPair, (), (const, override));
+	
+	// 템플릿 인자가 두 개 이상인 경우, 괄호가 필요합니다.
+	// MOCK_METHOD(bool, CheckMap, ((std::map<int, double> a), bool b), (override));
+	// MOCK_METHOD((std::pair<bool, int>), GetPair, (), (const, override));
+
+	// std::string GetName() const override {}
+	MOCK_METHOD(std::string, GetName, (), (const, override));
+
+	// void Foo() noexcept override {}
+	MOCK_METHOD(void, Foo, (), (noexcept, override));
+
+	// void Play() override {}
+	// MOCK_METHOD(void, Play, ());
+	MOCK_METHOD(void, Play, (), (override));
+	
+	// void Stop(int n) override {}
+	MOCK_METHOD(void, Stop, (int n), (override));
 };
+
+TEST(Mp3Test, Sample) {
+	MockMp3 mock;      // !
+}
 #endif
 
-class FileTarget : public DLoggerTarget {
-public:
-	void Write(Level level, const std::string& message) override {
-		printf("File에 기록 - %d[%s]\n", level, message.c_str());
-	}
-};
-
-class NetworkTarget : public DLoggerTarget {
-public:
-	void Write(Level level, const std::string& message) override {
-		printf("Network에 기록 - %d[%s]\n", level, message.c_str());
-	}
-};
-
-class DLogger {
-	std::vector<DLoggerTarget*> targets;
-public:
-	void AddTarget(DLoggerTarget* p) {
-		targets.push_back(p);
-	}
-
-	void Write(Level level, const std::string& message) {
-		for (DLoggerTarget* e: targets) {
-			e->Write(level, message);
-		}
-	}
-};
-
-//----------------
-#include <gtest/gtest.h>
-#include <algorithm>
-
-// Mock Object Pattern
-//  의도: 함수를 호출하였을 때 발생하는 부수효과를 관찰할 수 없어서, 테스트되지 않은 요구사항이 있을 때
-//  방법: 모의 객체를 이용해서 "행위 기반 검증"을 수행한다. 
-//       "행위 기반 검증(동작 검증)"
-//        - 객체에 작용을 가한 후, 내부적으로 발생한 함수의 호출 여부 / 횟수 / 순서 등의 정보 등을 통해 검증을 수행합니다.
-//       "상태 기반 검증(상태 검증)"
-//        - 객체에 작용을 가한 후, 내부적으로 발생한 부수효과(값 변경, 반환 값)를 이용해 검증을 수행합니다.
-//
-//  모의 객체(Mock Object)
-//    - 내부적으로 발생한 함수의 호출 여부 / 호출 횟수 / 호출 순서 등의 정보를 기록합니다.
-//    => Mock Framework 
-//      Java: jMock, EasyMock, Mockito, Spock
-//       C++: Google Mock
-
-// 1. include
 #include <gmock/gmock.h>
 
-// 2. Mocking
-	
+struct Element {};
 
-#if 0
-// 아래의 방법은 더 이상 권장되지 않습니다. - 1.10 이전
-// - MOCK_METHOD{ArgN}(함수 이름, 함수 시그니처)
-$ ./googletest/googlemock/scripts/generator/gmock_gen.py DLoggerTarget.h
-
-class MockDLoggerTarget : public DLoggerTarget {
- public:
-  MOCK_METHOD2(Write,
-      void(Level level, const std::string& message));
-};
-#endif
-
-// 1.10
-//  - Mocking을 위한 매크로가 변경되었습니다.
-//   => MOCK_METHOD(반환타입, 함수이름, 인자정보, 한정자정보);
-
-class MockDLoggerTarget : public DLoggerTarget {
+class Calc {
+	int x;
 public:
-	// void Write(Level level, const std::string& message) override {}
-	MOCK_METHOD(void, Write, (Level level, const std::string& message), (override));
+	virtual ~Calc() {}
+
+	// 행위 기반 검증 대상이 아닙니다.
+	virtual int Add(Element x) {}
+
+	// 행위 기반 검증 대상
+	virtual int Add(int times, Element x) {}
 };
 
-// DLoggerTarget에 2개 이상 타겟이 등록되고,
-// Write 수행하였을 때, 각 Target에 Write가 제대로 전달되는지 여부를 검증하고 싶다.
-TEST(DLoggerTest, Write) {
-	// Arrange
-	DLogger logger;
-	MockDLoggerTarget t1, t2;
-	logger.AddTarget(&t1);
-	logger.AddTarget(&t2);
-	Level test_level = INFO;
-	std::string test_message = "test_log_message";
+class User {
+public:
+	void Add(Calc* p) {
+		p->Add(10, Element{});
+	}
+};
+//------------------
+// 의존하는 객체가 상속 가능한 클래스라면, Google Mock을 통해 행위기반 검증을 수행하 수 있습니다.
+class MockCalc : public Calc {
+public:
+	MOCK_METHOD(int, Add, (int times, Element x), (override));
+};
 
-	// Assert
-	EXPECT_CALL(t1, Write(test_level, test_message));
-	EXPECT_CALL(t2, Write(test_level, test_message));
+// 인자 일치하는지 검증하기 위해서 필요합니다.
+bool operator==(const Element& lhs, const Element& rhs) {
+	return true;
+}
 
-	// Act
-	logger.Write(test_level, test_message);
+TEST(UserTest, Add) {
+	User user;
+	MockCalc calc;
+
+	// EXPECT_CALL(calc, Add);
+	EXPECT_CALL(calc, Add(10, Element{}));
+	
+	user.Add(&calc);
 }
